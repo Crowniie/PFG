@@ -8,7 +8,7 @@ def analyze_ticker(ticker:str, data:List[Dict])->Dict:
     if len(closing_data) < 200:
         return {
             "ticker": ticker,
-            "signal": "HOLD",
+            "signal": "hold",
             "reason": "Not enough data available for analysis",
             "price": current_price
         }
@@ -17,7 +17,7 @@ def analyze_ticker(ticker:str, data:List[Dict])->Dict:
     #Generate trading signal based on the current price and the 200 day MA
     return{
         "ticker": ticker,
-        "signal":"HOLD",
+        "signal":"hold",
         "reason":"hold",
         "price": current_price
     }

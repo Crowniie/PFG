@@ -77,7 +77,7 @@ def analyze_ticker_data(request: RequestProcessing)->ResponseStructure:
     if not request.data:
         raise HTTPException(status_code=400, detail="Error, no ticker data provided")
     #Initialize the response structure
-    signals = List[TickerData] = []
+    signals:List[TickerData] = []
     #Process each ticker data
     for ticker, ticker_data in request.data.items():
     #In case a specific ticker dosent have data, we will return a hold singnal to avoid botching remaining tickers if there is no specific data just for one ticker

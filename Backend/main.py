@@ -31,7 +31,7 @@ class RequestProcessing(BaseModel):
     data:Dict[str, TickerData] = Field(..., description="Ticker data for multiple tickers, Example: {'AAPL': Data(...), 'GOOGL': Data(...)}")    
     
     
-#------------------------Data Models For Data Exist    
+#------------------------Data Models For Data Exist--------------------------------    
 signals = Literal["buy", "sell", "hold"]
 class TickerResponse(BaseModel):
     ticker:str = Field(..., description="Ticker symbol", example="AAPL")

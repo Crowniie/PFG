@@ -1,4 +1,32 @@
 from typing import Dict,List,Optional
+#------------------Helper Functions----------------------------------
+def calculate_ma_200(closing_data:List[float])->float:
+    if len (closing_data) < 200:
+        return None
+    
+    ma_200 = sum(closing_data[-200:]) / 200
+    return ma_200
+
+def calculate_ema(closing_data:List[float], period:int)->List[float]:
+    if len(closing_data) < period:
+        return [None] * len(closing_data)
+    alpha = 2/(period + 1)
+    ema:List[float] = [closing_data[0]]  # Start with the first closing price as the initial EMA
+    
+    alpha = 2/(period + 1)
+    ema:List = [None]*(period-1)
+    seed = sum(closing_data[:period]) / period
+    ema.append(seed)
+    
+    for i in range(1, len(closing_data)):
+        previous = ema[-1]
+        new_ema = alpha*closing_data[i] + (1-alpha)*previous
+        ema.append(new_ema)
+    return ema
+
+def calculate_macd(closing_data:List[float])->Dict:
+    return NotImplementedError("MACD calculation is not implemented yet")
+
 def analyze_ticker(ticker:str, data:List[Dict])->Dict:
     #Extract closing prices from the provided data
     closing_data = [Data["close"] for Data in data]
@@ -21,12 +49,3 @@ def analyze_ticker(ticker:str, data:List[Dict])->Dict:
         "reason":"hold",
         "price": current_price
     }
-def calculate_ma_200(closing_data:List[float])->float:
-    ma_200 = sum(closing_data[-200:]) / 200
-    return ma_200
-
-def calculate_ema(closing_data:List[float], period:int)->float:
-    return NotImplementedError("EMA calculation is not implemented yet")
-
-def calculate_macd(closing_data:List[float])->Dict:
-    return NotImplementedError("MACD calculation is not implemented yet")

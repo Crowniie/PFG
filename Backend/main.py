@@ -32,12 +32,15 @@ class RequestProcessing(BaseModel):
     
     
 #------------------------Data Models For Data Exist--------------------------------    
-signals = Literal["buy", "sell", "hold"]
+signals = Literal["BUY_100", "SELL_100", "BUY_50", "SELL_50", "HOLD"]
 class TickerResponse(BaseModel):
     ticker:str = Field(..., description="Ticker symbol", example="AAPL")
     signal:signals = Field(..., description="Trading signal for the ticker", example="buy")
     reason:str = Field(..., description="Reason for the trading signal", example="The price cut the MA(200) above, indicating a potential trend upwards.")
     price:float = Field(..., description="Current price of the ticker", example=110.0)
+    ma200:Optional[float] = Field(None, description="200 day moving average of the ticker", example=105.0)
+    macd_value:Optional[float] = Field(None, description="Current MACD value", example=0.5)
+    macd_signal:Optional[float] = Field(None, description="Current MACD signal value", example=0.3)
 
 class ResponseStructure(BaseModel):
     uid:str = Field(..., description="Unique identifier for the user", example="user_001")
@@ -48,10 +51,11 @@ class ResponseStructure(BaseModel):
 #------------------------API Endpoints------------------------
 @app.get("/")
 def read_root():
-    """Healthcheck basico."""
+    """Healthcheck"""
     return {"status": "ok", "service": "investment-advisor-backend"}
 
 @app.post("/analyze", response_model=ResponseStructure)
+
 def analyze_ticker_data(request: RequestProcessing)->ResponseStructure:
     """Analyyzes the provided ticker data and returns the signals
     Expects body:
@@ -90,10 +94,12 @@ def analyze_ticker_data(request: RequestProcessing)->ResponseStructure:
                     price=0.0,
                 ))
         continue
+    
     data_list = [data.model_dump() for data in ticker_data.data]
     result = analyze_ticker(ticker, data_list)
     signals.append(TickerResponse(**result))
-    return ResponseStructure(
+    
+    return analyze_ticker_data(
         uid=request.uid,
         timestamp=datetime.now(timezone.utc).isoformat(),
         signals=signals,

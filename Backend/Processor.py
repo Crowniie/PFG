@@ -130,7 +130,7 @@ def analyze_ticker(ticker:str, data:List[Dict])->Dict:
             "ticker": ticker,
             "signal": "buy",
             "reason": f"The price cut the MA(200) above, indicating a potential trend upwards.",
-            "price": current_price
+            "price": round(current_price, 4)
         }
     if ma_cross_result == "upward_cross" and price_below_ma:
         return _build_response(
@@ -175,8 +175,8 @@ def _build_response(ticker:str, signal:str, reason:str, current_price:float, ma2
         "ticker": ticker,
         "signal": signal,
         "reason": reason,
-        "price": current_price,
-        "ma200": ma200,
-        "macd_value": macd_value,
-        "macd_signal": macd_signal
+        "price": round(current_price, 4),
+        "ma200": round(ma200,4) if ma200 is not None else None,
+        "macd_value": round(macd_value, 4) if macd_value is not None else None,
+        "macd_signal": round(macd_signal, 4) if macd_signal is not None else None
     }

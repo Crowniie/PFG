@@ -32,10 +32,10 @@ class RequestProcessing(BaseModel):
     
     
 #------------------------Data Models For Data Exist--------------------------------    
-signals = Literal["BUY_100", "SELL_100", "BUY_50", "SELL_50", "HOLD"]
+SignalType = Literal["BUY_100", "SELL_100", "BUY_50", "SELL_50", "HOLD"]
 class TickerResponse(BaseModel):
     ticker:str = Field(..., description="Ticker symbol", example="AAPL")
-    signal:signals = Field(..., description="Trading signal for the ticker", example="buy")
+    signal:SignalType = Field(..., description="Trading signal for the ticker", example="BUY_100")
     reason:str = Field(..., description="Reason for the trading signal", example="The price cut the MA(200) above, indicating a potential trend upwards.")
     price:float = Field(..., description="Current price of the ticker", example=110.0)
     ma200:Optional[float] = Field(None, description="200 day moving average of the ticker", example=105.0)
@@ -71,7 +71,7 @@ def analyze_ticker_data(request: RequestProcessing)->ResponseStructure:
           "signals": [
             {
               "ticker": "AAPL",
-              "signal": "buy",
+              "signal": "BUY_100",
               "reason": "The price cut the MA(200) above, indicating a potential trend upwards.",
               "price": 110.0
             },...
@@ -93,13 +93,13 @@ def analyze_ticker_data(request: RequestProcessing)->ResponseStructure:
                     reason="No hay datos disponibles",
                     price=0.0,
                 ))
-        continue
+            continue
     
-    data_list = [data.model_dump() for data in ticker_data.data]
-    result = analyze_ticker(ticker, data_list)
-    signals.append(TickerResponse(**result))
+        data_list = [data.model_dump() for data in ticker_data.data]
+        result = analyze_ticker(ticker, data_list)
+        signals.append(TickerResponse(**result))
     
-    return analyze_ticker_data(
+    return ResponseStructure(
         uid=request.uid,
         timestamp=datetime.now(timezone.utc).isoformat(),
         signals=signals,

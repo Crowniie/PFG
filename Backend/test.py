@@ -66,12 +66,24 @@ EXPECTED_RESULTS = {
 
 def main():
     payload = {
-        "user_id":"test_user",
-        "tickers_data": {
-            "TEST_BUY_100": build_price_series(series_buy_100()),
-            "TEST_SELL_100": build_price_series(series_sell_100()),
-            "TEST_HOLD_100": build_price_series(series_hold()),
-            "TEST_INSUFFICIENT_DATA": build_price_series(series_insufficient_data())
+        "uid":"test_user",
+        "data": {
+            "TEST_BUY_100": {
+                "ticker": "TEST_BUY_100",
+                "data": build_price_series(series_buy_100())
+            },
+            "TEST_SELL_100": {
+                "ticker": "TEST_SELL_100",
+                "data": build_price_series(series_sell_100())
+            },
+            "TEST_HOLD_100": {
+                "ticker": "TEST_HOLD_100",
+                "data": build_price_series(series_hold())
+            },
+            "TEST_INSUFFICIENT_DATA": {
+                "ticker": "TEST_INSUFFICIENT_DATA",
+                "data": build_price_series(series_insufficient_data())
+            }
         }
     }
     try:

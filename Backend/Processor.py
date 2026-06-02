@@ -7,21 +7,21 @@ def calculate_ma_200(closing_data:List[float])->float:
     ma_200 = sum(closing_data[-200:]) / 200
     return ma_200
 
-def calculate_ema(closing_data:List[float], period:int)->List[float]:
+def calculate_ema(closing_data: List[float], period: int) -> List[float]:
     if len(closing_data) < period:
         return [None] * len(closing_data)
-    alpha = 2/(period + 1)
-    ema:List[float] = [closing_data[0]]  # Start with the first closing price as the initial EMA
     
-    alpha = 2/(period + 1)
-    ema:List = [None]*(period-1)
+    alpha = 2 / (period + 1)
+    ema: List = [None] * (period - 1)
+    
     seed = sum(closing_data[:period]) / period
     ema.append(seed)
     
-    for i in range(1, len(closing_data)):
+    for i in range(period, len(closing_data)):
         previous = ema[-1]
-        new_ema = alpha*closing_data[i] + (1-alpha)*previous
+        new_ema = alpha * closing_data[i] + (1 - alpha) * previous
         ema.append(new_ema)
+    
     return ema
 
 def calculate_macd(closing_data:List[float],)->Dict[str,List[Optional[float]]]:
@@ -44,7 +44,7 @@ def calculate_macd(closing_data:List[float],)->Dict[str,List[Optional[float]]]:
             valid_start = i
             break
     
-    valid_macd_line:List[Optional[float]] = None
+    valid_macd_line:List[Optional[float]] = []
     
     for i in range(valid_start, len(closing_data)):
         valid_macd_line.append(macd_line[i])
@@ -54,11 +54,11 @@ def calculate_macd(closing_data:List[float],)->Dict[str,List[Optional[float]]]:
         for i in range(len(closing_data)):
             signal_line.append(None)
     else:
-        signal_line = calculate_ema(valid_macd_line, 9)
+        signal_valid = calculate_ema(valid_macd_line, 9)
         for i in range(valid_start):
             signal_line.append(None)
             
-        for  value in valid_macd_line:
+        for  value in signal_valid:
                 signal_line.append(value)
                 
     return {"macd_line": macd_line, "signal_line": signal_line}
@@ -99,17 +99,18 @@ def ma_cross(current_price:float, previous_price:float, ma_today:Optional[float]
     return None
 def analyze_ticker(ticker:str, data:List[Dict])->Dict:
     #Extract closing prices from the provided data
-    closing_data = [Data["close"] for Data in data]
+    closing_data = [d["close"] for d in data]
     current_price = closing_data[-1]
     
     #Check if there is enough data to calculate the full 200 day MA
     if len(closing_data) < 200:
-        return {
-            "ticker": ticker,
-            "signal": "hold",
-            "reason": "Not enough data available for analysis",
-            "price": current_price
-        }
+        return _build_response(
+            ticker,
+            "HOLD",
+            reason= "Not enough data available for analysis",
+            current_price=current_price,
+        )
+        
     #Calculate Indicators:
     ma_today = calculate_ma_200(closing_data)
     ma_yesterday = calculate_ma_200(closing_data[:-1])
@@ -125,14 +126,8 @@ def analyze_ticker(ticker:str, data:List[Dict])->Dict:
     price_above_ma = current_price > ma_today
     price_below_ma = current_price < ma_today
     
-    if ma_cross_result == "upward_cross" and price_above_ma:
-        return {
-            "ticker": ticker,
-            "signal": "buy",
-            "reason": f"The price cut the MA(200) above, indicating a potential trend upwards.",
-            "price": round(current_price, 4)
-        }
-    if ma_cross_result == "upward_cross" and price_below_ma:
+
+    if ma_cross_result == "upward_cross":
         return _build_response(
             ticker, "BUY_100",
             reason="The price cut the MA(200) above, indicating a potential trend upwards.",
@@ -140,7 +135,7 @@ def analyze_ticker(ticker:str, data:List[Dict])->Dict:
             macd_value=macd_today, macd_signal=signal_today,
         )
  
-    if ma_cross_result == "downward_cross" and price_above_ma:
+    if ma_cross_result == "downward_cross":
         return _build_response(
             ticker, "SELL_100",
             reason="MA (200) was cut downwards by the price, indicating a potential trend downwards (strong exit signal)",
@@ -170,7 +165,7 @@ def analyze_ticker(ticker:str, data:List[Dict])->Dict:
         current_price=current_price, ma200=ma_today,
         macd_value=macd_today, macd_signal=signal_today,
     )
-def _build_response(ticker:str, signal:str, reason:str, current_price:float, ma200:Optional[float], macd_value:Optional[float], macd_signal:Optional[float])->Dict:
+def _build_response(ticker:str, signal:str, reason:str, current_price:float, ma200:Optional[float] = None, macd_value:Optional[float] = None, macd_signal:Optional[float] = None)->Dict:
     return {
         "ticker": ticker,
         "signal": signal,

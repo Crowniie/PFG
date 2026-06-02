@@ -1,0 +1,2 @@
+cd C:\Users\lance\Desktop\PFG\Backend
+echo 3.11.9 | Out-File -Encoding ASCII -NoNewline .python-version

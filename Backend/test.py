@@ -2,7 +2,7 @@ import json,random
 from datetime import datetime, timedelta, timezone
 import requests
 
-BACKEND_URL = "http://localhost:8000/analyze"
+BACKEND_URL = "https://pfg-hxzo.onrender.com/analyze"
 
 #--------------------------Functions used to generate test data-----------------------------
 def generate_test_data(date:datetime,close:float)->list[dict]:

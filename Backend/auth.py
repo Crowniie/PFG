@@ -2,7 +2,6 @@ import os
 import bcrypt
 import httpx
 from typing import Optional
-from pydantic import HTTPException
 from fastapi import BaseModel, EmailStr
 
 #------------------------------Models for athentication------------------------------
@@ -10,7 +9,7 @@ class LoginRequest(BaseModel):
     submitted_password:str
     stored_password: str
     
-
+    
 
 class LoginResponse(BaseModel):
     success: bool

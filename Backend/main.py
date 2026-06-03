@@ -110,5 +110,5 @@ async def auth_verify_password(payload: LoginRequest):
     
     is_valid = verify_password(payload.submitted_password, payload.stored_password)
 
-    return LoginResponse(is_valid = is_valid)
+    return LoginResponse(success = is_valid)
     

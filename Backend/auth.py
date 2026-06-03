@@ -7,8 +7,9 @@ from fastapi import BaseModel, EmailStr
 
 #------------------------------Models for athentication------------------------------
 class LoginRequest(BaseModel):
-    email: EmailStr
-    password: str
+    submitted_password:str
+    stored_password: str
+    
 
 
 class LoginResponse(BaseModel):

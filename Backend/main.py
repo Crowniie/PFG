@@ -6,7 +6,8 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
  
 from Processor import analyze_ticker
- 
+from auth import verify_password, LoginRequest, LoginResponse
+
 app = FastAPI(
     title="Average price based advisor",
     description="Processes data and returns signals"
@@ -104,4 +105,10 @@ def analyze_ticker_data(request: RequestProcessing)->ResponseStructure:
         timestamp=datetime.now(timezone.utc).isoformat(),
         signals=signals,
     )
+@app.post("/auth/verify-password", response_model = LoginResponse)
+async def auth_verify_password(payload: LoginRequest):
+    
+    is_valid = verify_password(payload.submitted_password, payload.stored_password)
+
+    return LoginResponse(is_valid = is_valid)
     

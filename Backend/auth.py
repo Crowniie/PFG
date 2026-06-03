@@ -1,15 +1,12 @@
-import os
 import bcrypt
-import httpx
-from typing import Optional
-from fastapi import BaseModel, EmailStr
+from pydantic import BaseModel
 
 #------------------------------Models for athentication------------------------------
 class LoginRequest(BaseModel):
     submitted_password:str
     stored_password: str
     
-    
+
 
 class LoginResponse(BaseModel):
     success: bool

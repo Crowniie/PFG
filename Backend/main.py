@@ -106,7 +106,7 @@ def analyze_ticker_data(request: RequestProcessing)->ResponseStructure:
         signals=signals,
     )
 @app.post("/auth/verify-password", response_model = LoginResponse)
-async def auth_verify_password(payload: LoginRequest):
+def auth_verify_password(payload: LoginRequest):
     
     is_valid = verify_password(payload.submitted_password, payload.stored_password)
 

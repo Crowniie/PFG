@@ -12,7 +12,7 @@ class LoginResponse(BaseModel):
     success: bool
     
 #------------------------------Authentication function------------------------------
-async def verify_password(submitted_password: str, stored_password: str) -> LoginResponse:
+def verify_password(submitted_password: str, stored_password: str) -> LoginResponse:
     if not submitted_password or not stored_password:
         return False
     try:

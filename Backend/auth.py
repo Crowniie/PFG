@@ -10,6 +10,12 @@ class LoginRequest(BaseModel):
 
 class LoginResponse(BaseModel):
     success: bool
+
+class HashPasswordRequest(BaseModel):
+    password: str
+    
+class HashPasswordResponse(BaseModel):
+    hash: str
     
 #------------------------------Authentication function------------------------------
 def verify_password(submitted_password: str, stored_password: str) -> LoginResponse:
@@ -24,3 +30,10 @@ def verify_password(submitted_password: str, stored_password: str) -> LoginRespo
         )
     except(ValueError, TypeError):
         return False
+
+#------------------------------Hashing function------------------------------
+def hash_password(password: str) -> str:
+
+    salt = bcrypt.gensalt(rounds=12)
+    return bcrypt.hashpw(password.encode("utf-8"), salt).decode("utf-8")
+    

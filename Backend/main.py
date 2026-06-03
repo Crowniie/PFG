@@ -6,8 +6,7 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
  
 from Processor import analyze_ticker
-from auth import verify_password, LoginRequest, LoginResponse
-
+from auth import verify_password, LoginRequest, LoginResponse, HashPasswordRequest, HashPasswordResponse, hash_password
 app = FastAPI(
     title="Average price based advisor",
     description="Processes data and returns signals"
@@ -109,6 +108,11 @@ def analyze_ticker_data(request: RequestProcessing)->ResponseStructure:
 def auth_verify_password(payload: LoginRequest):
     
     is_valid = verify_password(payload.submitted_password, payload.stored_password)
-
     return LoginResponse(success = is_valid)
+
+@app.post("/auth/hash-password", response_model = HashPasswordResponse)
+def auth_hash_password(payload: HashPasswordRequest):
+    
+    hashed = hash_password(payload.password)
+    return HashPasswordResponse(hash = hashed)
     

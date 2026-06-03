@@ -1,26 +1,25 @@
-``` mermaid
+```mermaid
 flowchart TB
-    %% Core System
-    System["Investment Recommendation<br>Platform"]
-
-    %% External Entities
-    User(("User<br>(Small Investor)"))
-    Auth(("Identity Provider<br>(Auth0 / Firebase)"))
-    MarketAPI(("External<br>Financial APIs"))
-    Email(("Email<br>Service"))
-
-    %% User interactions
-    User -->|"Configures portfolio,<br>executes trades"| System
-    System -->|"Shows recommendations,<br>prices, & P&L"| User
+    User["Casual Investor"]
     
-    %% Authentication
-    System -->|"Validates credentials"| Auth
-    Auth -->|"Auth status"| System
-
-    %% Market Data
-    System -->|"Requests market data"| MarketAPI
-    MarketAPI -->|"Returns asset data"| System
+    subgraph System["Average Price Based Investment Advisor"]
+        direction TB
+        Frontend["Frontend - React + Vite + Tailwind"]
+        Middleware["Middleware - n8n Cloud (Orchestration and Logic)"]
+        Backend["Backend - FastAPI on Render (Compute and Auth)"]
+        Database[("Database - Airtable")]
+        
+        Frontend -->|HTTPS REST| Middleware
+        Middleware -->|HTTPS REST| Backend
+        Middleware -->|Airtable API| Database
+    end
     
-    %% Notifications
-    System -->|"Triggers alerts"| Email
-    Email -->|"Sends automated emails"| User
+    Alpaca["Alpaca Markets API - Market data provider"]
+    Gmail["Gmail SMTP - Notification service"]
+    
+    User -->|Login, manage portfolio, view recommendations| Frontend
+    User -.->|Receives action emails| Gmail
+    
+    Middleware -->|GET /v2/stocks/bars - daily OHLCV| Alpaca
+    Middleware -->|Send transactional emails| Gmail
+```

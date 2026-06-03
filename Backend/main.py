@@ -104,6 +104,7 @@ def analyze_ticker_data(request: RequestProcessing)->ResponseStructure:
         timestamp=datetime.now(timezone.utc).isoformat(),
         signals=signals,
     )
+
 @app.post("/auth/verify-password", response_model = LoginResponse)
 def auth_verify_password(payload: LoginRequest):
     

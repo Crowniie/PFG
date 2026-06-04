@@ -1,6 +1,6 @@
 //Base URLs for API middleware endpoints
 
-export const N8N_BASE_URL = "http://pfg1.app.n8n.cloud/webhook";
+export const N8N_BASE_URL = "https://pfg1.app.n8n.cloud/webhook";
 
 //Generate full endpoint URLs by appending paths to the base URL
 export const Endpoints = {

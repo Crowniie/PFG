@@ -1,73 +1,54 @@
 ```mermaid
 erDiagram
-    %% Relationships
-    USER ||--o{ PORTFOLIO : "owns"
-    USER ||--o{ SIMULATED_TRADE : "executes"
+    USER ||--o{ PORTFOLIO_ASSET : "tracks"
     USER ||--o{ RECOMMENDATION : "receives"
-    PORTFOLIO ||--o{ PORTFOLIO_ASSET : "contains"
-    ASSET ||--o{ PORTFOLIO_ASSET : "included in"
-    ASSET ||--o{ MARKET_DATA : "has history"
+    USER ||--o{ SIMULATED_TRADE : "executes"
+    ASSET ||--o{ PORTFOLIO_ASSET : "tracked in"
     ASSET ||--o{ RECOMMENDATION : "triggers"
-    RECOMMENDATION ||--o| SIMULATED_TRADE : "results in"
+    RECOMMENDATION ||--o| SIMULATED_TRADE : "may result in"
 
-    %% Tables and Attributes
     USER {
-        uuid id PK
+        string user_id PK
         string email
-        string password_hash
-        string risk_profile
-        datetime created_at
-    }
-
-    PORTFOLIO {
-        uuid id PK
-        uuid user_id FK
         string name
-        float total_simulated_value
-        datetime updated_at
+        string password_hash
+        boolean notifications_enabled
     }
-
     ASSET {
         string symbol PK
         string name
-        string asset_type "Stock, ETF, etc."
+        string asset_type
     }
-
     PORTFOLIO_ASSET {
-        uuid id PK
-        uuid portfolio_id FK
-        string asset_symbol FK
-        float simulated_quantity
-        float average_entry_price
+        autonumber portfolio_number PK
+        string user FK
+        string asset FK
+        string position_state
+        float target_quantity
+        float current_quantity
+        float entry_price
+        float last_sell_price
+        float stop_loss_pct
+        boolean active
     }
-
-    MARKET_DATA {
-        uuid id PK
-        string asset_symbol FK
-        date timestamp
-        float close_price
-        float ma_200
-        float macd_value
-        float macd_signal
-    }
-
     RECOMMENDATION {
-        uuid id PK
-        uuid user_id FK
-        string asset_symbol FK
-        string action_type "BUY or SELL"
+        autonumber id PK
+        string user FK
+        string asset FK
+        string signal_type
         string explanation
-        boolean is_acted_upon
+        float price_at_recommendation
+        string action_taken
         datetime created_at
     }
-
     SIMULATED_TRADE {
-        uuid id PK
-        uuid user_id FK
-        uuid recommendation_id FK
-        string asset_symbol FK
-        string trade_type "BUY or SELL"
+        autonumber id PK
+        string user FK
+        string recommendation FK
+        string asset FK
+        string trade_type
         float execution_price
         float quantity
         datetime executed_at
     }
+```

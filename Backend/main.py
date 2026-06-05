@@ -5,7 +5,7 @@ from typing import Dict, List, Literal, Optional
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
  
-from Processor import analyze_ticker
+from Processor import analyze_ticker, calculate_ema, calculate_ma_200_series, calculate_macd
 from auth import verify_password, LoginRequest, LoginResponse, HashPasswordRequest, HashPasswordResponse, hash_password
 app = FastAPI(
     title="Average price based advisor",
@@ -47,7 +47,35 @@ class ResponseStructure(BaseModel):
     timestamp:str = Field(..., description="Time of the response in ISO format", example="2026-01-01T00:00:00Z")
     signals:List[TickerResponse] = Field(..., description="List of trading signals for the tickers")
     
-    
+# ---- Models for /chart-data -------------------------------------------------
+
+class ChartBar(BaseModel):
+    time: str
+    open: float
+    high: float
+    low: float
+    close: float
+    volume: int
+    volume_weighted_price: Optional[float] = None
+
+
+class ChartDataRequest(BaseModel):
+    symbol: str
+    bars: List[ChartBar]
+
+
+class ChartIndicator(BaseModel):
+    time: str
+    close: float
+    ma200: Optional[float] = None
+    macd: Optional[float] = None
+    signal: Optional[float] = None
+    histogram: Optional[float] = None
+
+
+class ChartDataResponse(BaseModel):
+    symbol: str
+    indicators: List[ChartIndicator] 
 #------------------------API Endpoints------------------------
 @app.get("/")
 def read_root():
@@ -116,4 +144,44 @@ def auth_hash_password(payload: HashPasswordRequest):
     
     hashed = hash_password(payload.password)
     return HashPasswordResponse(hash = hashed)
+
+@app.post("/chart-data", response_model=ChartDataResponse)
+def chart_data(payload: ChartDataRequest):
+    """Compute MA200, MACD and signal line aligned to the provided bars.
+
+    Receives bars from n8n (which fetched them from Alpaca), runs the same
+    indicator calculations used by /analyze, and returns one indicator
+    point per input bar. The frontend uses this to draw the chart.
+    """
+    bars = payload.bars
+    if not bars:
+        return ChartDataResponse(symbol=payload.symbol, indicators=[])
+
+    closes = [b.close for b in bars]
+
+    ma200_series = calculate_ma_200_series(closes)
+    macd_result = calculate_macd(closes)
+    macd_line = macd_result["macd_line"]
+    signal_line = macd_result["signal_line"]
+
+    indicators = []
+    for i, bar in enumerate(bars):
+        ma200_val = ma200_series[i] if i < len(ma200_series) else None
+        macd_val = macd_line[i] if i < len(macd_line) else None
+        signal_val = signal_line[i] if i < len(signal_line) else None
+
+        histogram = None
+        if macd_val is not None and signal_val is not None:
+            histogram = macd_val - signal_val
+
+        indicators.append(ChartIndicator(
+            time=bar.time,
+            close=bar.close,
+            ma200=round(ma200_val, 4) if ma200_val is not None else None,
+            macd=round(macd_val, 4) if macd_val is not None else None,
+            signal=round(signal_val, 4) if signal_val is not None else None,
+            histogram=round(histogram, 4) if histogram is not None else None,
+        ))
+
+    return ChartDataResponse(symbol=payload.symbol, indicators=indicators)
     

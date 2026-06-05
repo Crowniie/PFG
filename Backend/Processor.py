@@ -165,6 +165,21 @@ def analyze_ticker(ticker:str, data:List[Dict])->Dict:
         current_price=current_price, ma200=ma_today,
         macd_value=macd_today, macd_signal=signal_today,
     )
+def calculate_ma_200_series(closing_data: List[float]) -> List[Optional[float]]:
+    """Return the MA(200) value at every index in the series.
+
+    Returns None for the first 199 days (not enough history) and a numeric
+    value from index 199 onwards. The list always has the same length as
+    the input so it can be aligned by index with bars/timestamps.
+    """
+    series: List[Optional[float]] = []
+    for i in range(len(closing_data)):
+        if i < 199:
+            series.append(None)
+        else:
+            window = closing_data[i - 199:i + 1]
+            series.append(sum(window) / 200)
+    return series
 def _build_response(ticker:str, signal:str, reason:str, current_price:float, ma200:Optional[float] = None, macd_value:Optional[float] = None, macd_signal:Optional[float] = None)->Dict:
     return {
         "ticker": ticker,

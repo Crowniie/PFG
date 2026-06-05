@@ -2,7 +2,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
 import Login from "./pages/login";
 import Register from "./pages/register";
-
+import Dashboard from "./pages/dashboard";
 function App() {
   const { isAuthenticated } = useAuth();
 
@@ -43,11 +43,11 @@ function App() {
     />
 
       {/* Protected routes */}
-      <Route
-        path="/dashboard"
-        element={
-          isAuthenticated ? (
-            <PlaceholderPage title="Dashboard" />
+<Route
+  path="/dashboard"
+  element={
+    isAuthenticated ? (
+      <Dashboard />
           ) : (
             <Navigate to="/login" replace />
           )

@@ -31,10 +31,10 @@ export interface PortfolioAsset{
     id: string;
     asset_symbol: string;
     target_quantity: number;
+    position_state: PositionState;
     current_quantity: number;
     entry_price: number | null;
     last_sell_price: number | null;
-    stop_loss_pct: number | null;
 }
 
 export interface AddPortfolioRequest{

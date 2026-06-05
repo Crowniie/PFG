@@ -65,3 +65,17 @@ export interface Asset{
     asset_type: AssetType;
 }
 
+//Chart types
+export interface ChartIndicator {
+  time: string;
+  close: number;
+  ma200: number | null;
+  macd: number | null;
+  signal: number | null;
+  histogram: number | null;
+}
+
+export interface ChartDataResponse {
+  symbol: string;
+  indicators: ChartIndicator[];
+} 

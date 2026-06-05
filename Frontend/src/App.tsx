@@ -3,6 +3,9 @@ import { useAuth } from "./context/AuthContext";
 import Login from "./pages/login";
 import Register from "./pages/register";
 import Dashboard from "./pages/dashboard";
+import AssetChart from "./pages/assetchart";
+import Welcome from "./pages/welcome";
+import Knowledge from "./pages/knowledge";
 function App() {
   const { isAuthenticated } = useAuth();
 
@@ -15,7 +18,7 @@ function App() {
           isAuthenticated ? (
             <Navigate to="/dashboard" replace />
           ) : (
-            <PlaceholderPage title="Landing - Splash Page" />
+            <Welcome />
           )
         }
       />
@@ -66,8 +69,29 @@ function App() {
 
       {/* Catch-all: send to root */}
       <Route path="*" element={<Navigate to="/" replace />} />
+      <Route
+        path="/asset/:symbol"
+        element={
+          isAuthenticated ? (
+            <AssetChart />
+             ) : (
+             <Navigate to="/login" replace />
+      )
+  }
+/>
+<Route
+  path="/knowledge"
+  element={
+    isAuthenticated ? (
+      <Knowledge />
+    ) : (
+      <Navigate to="/login" replace />
+    )
+  }
+/>
     </Routes>
   );
+  
 }
 
 function PlaceholderPage({ title }: { title: string }) {

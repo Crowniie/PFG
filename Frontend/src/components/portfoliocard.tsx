@@ -1,4 +1,5 @@
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, LineChart } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import type { PortfolioAsset, PositionState } from "../types";
 
 interface PortfolioCardProps {
@@ -12,10 +13,16 @@ export default function PortfolioCard({
   onEdit,
   onRemove,
 }: PortfolioCardProps) {
+  const navigate = useNavigate();
+
   const progress =
     asset.target_quantity > 0
       ? Math.min(100, (asset.current_quantity / asset.target_quantity) * 100)
       : 0;
+
+  const handleViewChart = () => {
+    navigate(`/asset/${encodeURIComponent(asset.asset_symbol)}`);
+  };
 
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 flex flex-col gap-4">
@@ -49,8 +56,17 @@ export default function PortfolioCard({
         )}
       </div>
 
+      {/* View chart link */}
+      <button
+        onClick={handleViewChart}
+        className="flex items-center justify-center gap-1.5 py-2 text-xs font-medium text-teal-400 hover:text-teal-300 hover:bg-slate-800 transition-colors rounded-lg border border-teal-400/30 hover:border-teal-400/50"
+      >
+        <LineChart className="w-4 h-4" />
+        View chart
+      </button>
+
       {/* Actions */}
-      <div className="flex gap-2 pt-2">
+      <div className="flex gap-2">
         <button
           onClick={() => onEdit(asset)}
           className="flex-1 py-2 border border-slate-700 rounded-lg text-slate-400 hover:text-teal-400 hover:border-teal-400 transition-colors flex items-center justify-center gap-1.5 text-xs font-medium"

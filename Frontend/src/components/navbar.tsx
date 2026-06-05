@@ -30,10 +30,13 @@ export default function Navbar() {
 
           <div className="hidden md:flex items-center gap-2">
             <NavLink to="/dashboard" active={isActive("/dashboard")}>
-              Dashboard
+                Dashboard
             </NavLink>
             <NavLink to="/history" active={isActive("/history")}>
-              History
+                History
+            </NavLink>
+            <NavLink to="/knowledge" active={isActive("/knowledge")}>
+                Knowledge
             </NavLink>
           </div>
         </div>
@@ -60,10 +63,13 @@ export default function Navbar() {
       {/* Mobile tabs */}
       <div className="md:hidden border-t border-slate-800 px-4 py-2 flex items-center gap-2">
         <NavLink to="/dashboard" active={isActive("/dashboard")}>
-          Dashboard
+             Dashboard
         </NavLink>
         <NavLink to="/history" active={isActive("/history")}>
-          History
+            History
+        </NavLink>
+        <NavLink to="/knowledge" active={isActive("/knowledge")}>
+            Knowledge
         </NavLink>
       </div>
     </nav>

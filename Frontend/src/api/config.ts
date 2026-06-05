@@ -12,4 +12,5 @@ export const Endpoints = {
     UPDATE_TARGET: `${N8N_BASE_URL}/portfolio/update-target`,
     GET_SIGNALS_HISTORY: `${N8N_BASE_URL}/signals/history`,
     GET_ASSETS: `${N8N_BASE_URL}/assets`,
+    GET_CHART_DATA: `${N8N_BASE_URL}/chart-data`,
 } as const;

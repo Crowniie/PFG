@@ -1,7 +1,7 @@
-from fastapi import FastAPI
 from datetime import datetime, timezone
 from typing import Dict, List, Literal, Optional
- 
+#Note: although these imports might appear to not be correctyly immported, they are functional during deployment
+
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
  

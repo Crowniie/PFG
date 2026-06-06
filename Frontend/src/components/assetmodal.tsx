@@ -77,12 +77,14 @@ export default function AddAssetModal({
   }, [open]);
 
   // Filter catalog to exclude assets already in the user's portfolio
-  const ownedSymbols = new Set(
-    currentPortfolio.map((p) => p.asset_symbol.toUpperCase())
-  );
-  const available = catalog.filter(
-    (a) => !ownedSymbols.has(a.symbol.toUpperCase())
-  );
+const ownedSymbols = new Set(
+  (currentPortfolio || [])
+    .filter((p) => p?.asset_symbol)
+    .map((p) => p.asset_symbol.toUpperCase())
+);
+const available = catalog.filter(
+  (a) => a?.symbol && !ownedSymbols.has(a.symbol.toUpperCase())
+);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();

@@ -1,7 +1,7 @@
 import { apiFetch } from "./client";
 import { Endpoints } from "./config";
 import type { Recommendation } from "../types";
-
+ 
 export async function getSignalsHistory(
   userId: string
 ): Promise<{
@@ -14,3 +14,4 @@ export async function getSignalsHistory(
   )}`;
   return apiFetch(url, { method: "GET" });
 }
+ 

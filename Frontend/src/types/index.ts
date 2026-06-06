@@ -52,7 +52,7 @@ export interface Recommendation{
     signal_type: SignalType;
     explanation: string;
     price_at_recommendation: number;
-    action_taken: boolean;
+    action_taken: ActionTaken;
     created_at: string;
 }
 
@@ -79,3 +79,6 @@ export interface ChartDataResponse {
   symbol: string;
   indicators: ChartIndicator[];
 } 
+//Recommendation types
+export type ActionTaken = "EXECUTED" | "IGNORED" | "STOP_LOSS" | "PENDING";
+

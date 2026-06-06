@@ -1,3 +1,5 @@
+import { useNavigate } from "react-router-dom";
+import { ArrowRight } from "lucide-react";
 import type { Recommendation, SignalType, ActionTaken } from "../types";
 
 interface RecommendationCardProps {
@@ -7,9 +9,21 @@ interface RecommendationCardProps {
 export default function RecommendationCard({
   recommendation,
 }: RecommendationCardProps) {
+  const navigate = useNavigate();
+
+  const isPending = recommendation.action_taken === "PENDING";
+
+  const handleReview = () => {
+    navigate(
+      `/asset/${encodeURIComponent(
+        recommendation.asset_symbol
+      )}/decide?recommendation=${encodeURIComponent(recommendation.id)}`
+    );
+  };
+
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 flex flex-col gap-3">
-      {/* Top row: ticker + badges + date */}
+      {/* Top row */}
       <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-2">
         <div className="flex items-center gap-3 flex-wrap">
           <span className="text-2xl font-semibold text-slate-100">
@@ -39,6 +53,17 @@ export default function RecommendationCard({
         <p className="text-sm text-slate-300 leading-relaxed border-l-2 border-slate-800 pl-3">
           {recommendation.explanation}
         </p>
+      )}
+
+      {/* CTA only when pending */}
+      {isPending && (
+        <button
+          onClick={handleReview}
+          className="mt-2 inline-flex items-center justify-center gap-1.5 px-4 py-2 text-sm font-medium bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 rounded-lg border border-amber-400/30 hover:border-amber-400/50 transition-colors"
+        >
+          Review &amp; decide
+          <ArrowRight className="w-4 h-4" />
+        </button>
       )}
     </div>
   );

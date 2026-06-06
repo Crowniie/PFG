@@ -7,7 +7,7 @@ import AssetChart from "./pages/assetchart";
 import Welcome from "./pages/welcome";
 import Knowledge from "./pages/knowledge";
 import History from "./pages/history";
-
+import AssetChartDecide from "./pages/assetchartdecide";
 function App() {
   const { isAuthenticated } = useAuth();
 
@@ -81,15 +81,26 @@ function App() {
       )
   }
 />
-<Route
-  path="/knowledge"
-  element={
-    isAuthenticated ? (
-      <Knowledge />
-    ) : (
-      <Navigate to="/login" replace />
-    )
-  }
+      <Route
+        path="/knowledge"
+        element={
+          isAuthenticated ? (
+          <Knowledge />
+          ) : (
+          <Navigate to="/login" replace />
+          )
+      }
+  
+/>
+        <Route
+          path="/asset/:symbol/decide"
+          element={
+          isAuthenticated ? (
+            <AssetChartDecide />
+            ) : (
+            <Navigate to="/login" replace />
+            )
+          }
 />
     </Routes>
   );

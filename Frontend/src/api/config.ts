@@ -13,4 +13,5 @@ export const Endpoints = {
     GET_SIGNALS_HISTORY: `${N8N_BASE_URL}/signals/history`,
     GET_ASSETS: `${N8N_BASE_URL}/assets`,
     GET_CHART_DATA: `${N8N_BASE_URL}/chart-data`,
+    DECIDE_RECOMMENDATION: `${N8N_BASE_URL}/recommendations/decide`,
 } as const;

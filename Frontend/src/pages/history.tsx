@@ -32,7 +32,11 @@ export default function History() {
       try {
         const response = await getSignalsHistory(user.user_id);
         if (!cancelled) {
-          setRecommendations(response.recommendations || []);
+          setRecommendations(
+            (response.recommendations || []).filter(
+            (r) => r.signal_type !== "HOLD"
+             )
+          );
         }
       } catch (err) {
         if (!cancelled) {

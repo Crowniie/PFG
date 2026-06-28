@@ -71,10 +71,11 @@ export default function AssetChart() {
   // load the recommendation when there's an id in the URL
   useEffect(() => {
     if (!recommendationId || !user) return;
+    const userId = user.user_id;
 
     async function load() {
       try {
-        const response = await getSignalsHistory(user.user_id);
+        const response = await getSignalsHistory(userId);
         const found = (response.recommendations || []).find(
           (r: Recommendation) => r.id === recommendationId
         );

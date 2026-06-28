@@ -24,11 +24,13 @@ export default function History() {
 
   useEffect(() => {
     if (!user) return;
+    const userId = user.user_id;
+
     async function load() {
       setLoading(true);
       setError(null);
       try {
-        const response = await getSignalsHistory(user.user_id);
+        const response = await getSignalsHistory(userId);
         // drop HOLD signals, they aren't actionable
         const list = (response.recommendations || []).filter(
           (r: Recommendation) => r.signal_type !== "HOLD"

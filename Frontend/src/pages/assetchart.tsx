@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   ResponsiveContainer,
@@ -17,7 +17,6 @@ import type { ChartIndicator } from "../types";
 import { getChartData } from "../api/chart";
 import Navbar from "../components/navbar";
 import Alert from "../components/alert";
-import { Endpoints } from "../api/config";
 
 type Timeframe = "1M" | "3M" | "6M" | "YTD" | "1Y" | "ALL";
 
@@ -32,8 +31,6 @@ const TIMEFRAMES: { value: Timeframe; label: string }[] = [
 
 export default function AssetChart() {
   const { symbol = "" } = useParams<{ symbol: string }>();
-  console.log("AssetChart rendered, symbol =", symbol);
-  console.log("Endpoint URL would be:", `${Endpoints.GET_CHART_DATA}?symbol=${symbol}`);
   const navigate = useNavigate();
 
   const [indicators, setIndicators] = useState<ChartIndicator[]>([]);
@@ -43,67 +40,28 @@ export default function AssetChart() {
 
   useEffect(() => {
     if (!symbol) return;
-    let cancelled = false;
 
-    const load = async () => {
+    async function load() {
       setLoading(true);
       setError(null);
       try {
         const response = await getChartData(symbol);
-        if (!cancelled) {
-          setIndicators(response.indicators || []);
-        }
+        setIndicators(response.indicators || []);
       } catch (err) {
-        if (!cancelled) {
-          setError("Could not load chart data. Please try again.");
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
+        setError("Could not load chart data. Please try again.");
       }
-    };
-
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, [symbol]);
-
-  // Filter indicators based on selected timeframe
-  const filtered = useMemo(() => {
-    if (indicators.length === 0) return [];
-
-    const now = new Date();
-    let cutoff: Date | null = null;
-
-    switch (timeframe) {
-      case "1M":
-        cutoff = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-        break;
-      case "3M":
-        cutoff = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
-        break;
-      case "6M":
-        cutoff = new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000);
-        break;
-      case "YTD":
-        cutoff = new Date(now.getFullYear(), 0, 1);
-        break;
-      case "1Y":
-        cutoff = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
-        break;
-      case "ALL":
-      default:
-        cutoff = null;
+      setLoading(false);
     }
 
-    if (!cutoff) return indicators;
-    return indicators.filter((p) => new Date(p.time) >= cutoff!);
-  }, [indicators, timeframe]);
+    load();
+  }, [symbol]);
 
-  // Latest values for the side panel
-  const latest = indicators.length > 0 ? indicators[indicators.length - 1] : null;
+  // points inside the selected timeframe
+  const filtered = filterByTimeframe(indicators, timeframe);
+
+  // last point, used by the side panel
+  const latest =
+    indicators.length > 0 ? indicators[indicators.length - 1] : null;
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
@@ -161,7 +119,30 @@ export default function AssetChart() {
   );
 }
 
-// Subcomponents ---------------------------------------------------------------
+// keep only the points newer than the timeframe's cutoff
+function filterByTimeframe(indicators: ChartIndicator[], timeframe: Timeframe) {
+  if (indicators.length === 0) return [];
+
+  const now = new Date();
+  let cutoff: Date | null = null;
+
+  if (timeframe === "1M") {
+    cutoff = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+  } else if (timeframe === "3M") {
+    cutoff = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+  } else if (timeframe === "6M") {
+    cutoff = new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000);
+  } else if (timeframe === "YTD") {
+    cutoff = new Date(now.getFullYear(), 0, 1);
+  } else if (timeframe === "1Y") {
+    cutoff = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+  } else {
+    cutoff = null; // ALL
+  }
+
+  if (!cutoff) return indicators;
+  return indicators.filter((p) => new Date(p.time) >= cutoff!);
+}
 
 interface TimeframeSelectorProps {
   value: Timeframe;
@@ -188,11 +169,7 @@ function TimeframeSelector({ value, onChange }: TimeframeSelectorProps) {
   );
 }
 
-interface ChartProps {
-  data: ChartIndicator[];
-}
-
-function PriceChart({ data }: ChartProps) {
+function PriceChart({ data }: { data: ChartIndicator[] }) {
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
       <h2 className="text-sm font-medium text-slate-400 uppercase tracking-wider mb-4">
@@ -212,7 +189,7 @@ function PriceChart({ data }: ChartProps) {
               stroke="#475569"
               tick={{ fontSize: 11 }}
               domain={["auto", "auto"]}
-              tickFormatter={(v) => `$${v.toFixed(0)}`}
+              tickFormatter={(v) => "$" + v.toFixed(0)}
             />
             <Tooltip
               contentStyle={{
@@ -222,10 +199,10 @@ function PriceChart({ data }: ChartProps) {
                 color: "#f1f5f9",
               }}
               labelFormatter={formatDateTick}
-            formatter={(value: any, name: any) => [
-  value != null ? `$${Number(value).toFixed(2)}` : "—",
-  name === "close" ? "Price" : name === "ma200" ? "MA200" : String(name ?? ""),
-]}
+              formatter={(value: any, name: any) => [
+                value != null ? "$" + Number(value).toFixed(2) : "—",
+                name === "close" ? "Price" : name === "ma200" ? "MA200" : String(name ?? ""),
+              ]}
             />
             <Line
               type="monotone"
@@ -253,7 +230,7 @@ function PriceChart({ data }: ChartProps) {
   );
 }
 
-function MacdChart({ data }: ChartProps) {
+function MacdChart({ data }: { data: ChartIndicator[] }) {
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
       <h2 className="text-sm font-medium text-slate-400 uppercase tracking-wider mb-4">
@@ -328,11 +305,7 @@ function MacdChart({ data }: ChartProps) {
   );
 }
 
-interface LatestIndicatorsProps {
-  latest: ChartIndicator | null;
-}
-
-function LatestIndicators({ latest }: LatestIndicatorsProps) {
+function LatestIndicators({ latest }: { latest: ChartIndicator | null }) {
   if (!latest) {
     return (
       <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
@@ -350,12 +323,12 @@ function LatestIndicators({ latest }: LatestIndicatorsProps) {
         <Stat label="Date" value={formatDateFull(latest.time)} />
         <Stat
           label="Price"
-          value={latest.close != null ? `$${latest.close.toFixed(2)}` : "—"}
+          value={latest.close != null ? "$" + latest.close.toFixed(2) : "—"}
           highlight
         />
         <Stat
           label="MA200"
-          value={latest.ma200 != null ? `$${latest.ma200.toFixed(2)}` : "—"}
+          value={latest.ma200 != null ? "$" + latest.ma200.toFixed(2) : "—"}
         />
         <Stat
           label="MACD"
@@ -374,20 +347,23 @@ function LatestIndicators({ latest }: LatestIndicatorsProps) {
   );
 }
 
-interface StatProps {
+function Stat({
+  label,
+  value,
+  highlight = false,
+}: {
   label: string;
   value: string;
   highlight?: boolean;
-}
-
-function Stat({ label, value, highlight = false }: StatProps) {
+}) {
   return (
     <div className="flex justify-between items-center">
       <dt className="text-xs text-slate-500 uppercase tracking-wider">{label}</dt>
       <dd
-        className={`font-mono text-sm ${
-          highlight ? "text-teal-300 font-medium" : "text-slate-200"
-        }`}
+        className={
+          "font-mono text-sm " +
+          (highlight ? "text-teal-300 font-medium" : "text-slate-200")
+        }
       >
         {value}
       </dd>
@@ -395,14 +371,12 @@ function Stat({ label, value, highlight = false }: StatProps) {
   );
 }
 
-// Helpers ---------------------------------------------------------------
-
 function formatDateTick(iso: any): string {
   if (typeof iso !== "string") return "";
   try {
     const d = new Date(iso);
     return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-  } catch {
+  } catch (e) {
     return "";
   }
 }
@@ -416,7 +390,7 @@ function formatDateFull(iso: any): string {
       month: "short",
       day: "numeric",
     });
-  } catch {
+  } catch (e) {
     return "";
   }
 }

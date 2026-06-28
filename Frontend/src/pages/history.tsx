@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { History as HistoryIcon } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { getSignalsHistory } from "../api/signals";
@@ -24,53 +24,38 @@ export default function History() {
 
   useEffect(() => {
     if (!user) return;
-    let cancelled = false;
-
-    const load = async () => {
+    async function load() {
       setLoading(true);
       setError(null);
       try {
         const response = await getSignalsHistory(user.user_id);
-        if (!cancelled) {
-          setRecommendations(
-            (response.recommendations || []).filter(
-            (r) => r.signal_type !== "HOLD"
-             )
-          );
-        }
+        // drop HOLD signals, they aren't actionable
+        const list = (response.recommendations || []).filter(
+          (r: Recommendation) => r.signal_type !== "HOLD"
+        );
+        setRecommendations(list);
       } catch (err) {
-        if (!cancelled) {
-          setError("Could not load your recommendations. Please try again.");
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
+        setError("Could not load your recommendations. Please try again.");
       }
-    };
+      setLoading(false);
+    }
 
     load();
-    return () => {
-      cancelled = true;
-    };
   }, [user?.user_id]);
 
-  const filtered = useMemo(() => {
-    if (filter === "ALL") return recommendations;
-    return recommendations.filter((r) => r.action_taken === filter);
-  }, [recommendations, filter]);
+  // recommendations matching the active filter
+  let filtered = recommendations;
+  if (filter !== "ALL") {
+    filtered = recommendations.filter((r) => r.action_taken === filter);
+  }
 
-  const counts = useMemo(() => {
-    return recommendations.reduce(
-      (acc, r) => {
-        acc.ALL += 1;
-        if (r.action_taken === "EXECUTED") acc.EXECUTED += 1;
-        if (r.action_taken === "IGNORED") acc.IGNORED += 1;
-        return acc;
-      },
-      { ALL: 0, EXECUTED: 0, IGNORED: 0 } as Record<string, number>
-    );
-  }, [recommendations]);
+  // count per tab
+  const counts: Record<string, number> = { ALL: 0, EXECUTED: 0, IGNORED: 0 };
+  for (const r of recommendations) {
+    counts.ALL += 1;
+    if (r.action_taken === "EXECUTED") counts.EXECUTED += 1;
+    if (r.action_taken === "IGNORED") counts.IGNORED += 1;
+  }
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
@@ -126,8 +111,6 @@ export default function History() {
   );
 }
 
-// Helpers ---------------------------------------------------------------
-
 interface FilterTabProps {
   label: string;
   count: number;
@@ -135,16 +118,18 @@ interface FilterTabProps {
   onClick: () => void;
 }
 
-function FilterTab({ label, count, active, onClick }: FilterTabProps) {
+function FilterTab(props: FilterTabProps) {
+  const { label, count, active, onClick } = props;
+
+  let className =
+    "text-slate-400 hover:text-slate-100 transition-colors text-sm px-4 py-2";
+  if (active) {
+    className =
+      "text-teal-400 font-medium text-sm px-4 py-2 border-b-2 border-teal-400 -mb-px";
+  }
+
   return (
-    <button
-      onClick={onClick}
-      className={
-        active
-          ? "text-teal-400 font-medium text-sm px-4 py-2 border-b-2 border-teal-400 -mb-px"
-          : "text-slate-400 hover:text-slate-100 transition-colors text-sm px-4 py-2"
-      }
-    >
+    <button onClick={onClick} className={className}>
       {label}
       <span className="ml-2 text-xs text-slate-500">({count})</span>
     </button>

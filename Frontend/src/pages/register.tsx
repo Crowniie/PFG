@@ -21,7 +21,7 @@ export default function Register() {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = async (e: FormEvent) => {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
     setIsSubmitting(true);
@@ -30,7 +30,7 @@ export default function Register() {
       const response = await apiRegister({ name, email, password });
 
       if (response.success && response.user) {
-        // Auto-login after successful registration
+        // auto-login right after registering
         setAuthUser(response.user);
         navigate("/dashboard");
       } else {
@@ -40,7 +40,6 @@ export default function Register() {
       if (err.status === 409) {
         setError("This email is already registered. Try signing in instead.");
       } else if (err.status === 400) {
-        // Validation errors from the backend
         const errors = err.data?.errors;
         if (Array.isArray(errors) && errors.length > 0) {
           setError(errors[0]);
@@ -50,35 +49,113 @@ export default function Register() {
       } else {
         setError("Could not connect. Please try again later.");
       }
-    } finally {
-      setIsSubmitting(false);
     }
-  };
+
+    setIsSubmitting(false);
+  }
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center px-4 antialiased">
       <main className="w-full max-w-[440px]">
         <Card className="flex flex-col gap-6">
-          <Header />
+          {/* Header */}
+          <div className="text-center space-y-2">
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-lg bg-slate-800 border border-slate-700 mb-2">
+              <TrendingUp className="w-6 h-6 text-teal-400" />
+            </div>
+            <h1 className="text-2xl font-semibold">Investment Advisor</h1>
+            <p className="text-slate-400">Create your account</p>
+          </div>
 
           {error && <Alert variant="error">{error}</Alert>}
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-            <NameField value={name} onChange={setName} />
-            <EmailField value={email} onChange={setEmail} />
-            <PasswordField
-              value={password}
-              onChange={setPassword}
-              show={showPassword}
-              onToggleShow={() => setShowPassword((s) => !s)}
-            />
+            {/* Full name field */}
+            <div className="space-y-1">
+              <Label htmlFor="name">Full Name</Label>
+              <div className="relative">
+                <User className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                <Input
+                  id="name"
+                  type="text"
+                  required
+                  minLength={1}
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Jane Doe"
+                  hasIconLeft
+                />
+              </div>
+            </div>
+
+            {/* Email field */}
+            <div className="space-y-1">
+              <Label htmlFor="email">Email Address</Label>
+              <div className="relative">
+                <Mail className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                <Input
+                  id="email"
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="name@example.com"
+                  hasIconLeft
+                />
+              </div>
+            </div>
+
+            {/* Password field */}
+            <div className="space-y-1">
+              <Label htmlFor="password">Password</Label>
+              <div className="relative">
+                <Lock className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  required
+                  minLength={8}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="At least 8 characters"
+                  hasIconLeft
+                  hasIconRight
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
+                </button>
+              </div>
+              <p className="text-xs text-slate-500 mt-1">
+                Must be at least 8 characters.
+              </p>
+            </div>
 
             <Button type="submit" fullWidth disabled={isSubmitting}>
               {isSubmitting ? "Creating account…" : "Create Account"}
             </Button>
           </form>
 
-          <SignInLink />
+          {/* Sign in link */}
+          <div className="text-center border-t border-slate-800 pt-4">
+            <p className="text-sm text-slate-400">
+              Already have an account?{" "}
+              <Link
+                to="/login"
+                className="text-teal-400 hover:text-teal-300 font-medium hover:underline underline-offset-4 transition-colors"
+              >
+                Sign in
+              </Link>
+            </p>
+          </div>
         </Card>
 
         <p className="text-center text-sm text-slate-500 mt-6">
@@ -91,125 +168,6 @@ export default function Register() {
           </a>
         </p>
       </main>
-    </div>
-  );
-}
-
-// Helpers ---------------------------------------------------------------
-
-function Header() {
-  return (
-    <div className="text-center space-y-2">
-      <div className="inline-flex items-center justify-center w-12 h-12 rounded-lg bg-slate-800 border border-slate-700 mb-2">
-        <TrendingUp className="w-6 h-6 text-teal-400" />
-      </div>
-      <h1 className="text-2xl font-semibold">Investment Advisor</h1>
-      <p className="text-slate-400">Create your account</p>
-    </div>
-  );
-}
-
-interface FieldProps {
-  value: string;
-  onChange: (value: string) => void;
-}
-
-function NameField({ value, onChange }: FieldProps) {
-  return (
-    <div className="space-y-1">
-      <Label htmlFor="name">Full Name</Label>
-      <div className="relative">
-        <User className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
-        <Input
-          id="name"
-          type="text"
-          required
-          minLength={1}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder="Jane Doe"
-          hasIconLeft
-        />
-      </div>
-    </div>
-  );
-}
-
-function EmailField({ value, onChange }: FieldProps) {
-  return (
-    <div className="space-y-1">
-      <Label htmlFor="email">Email Address</Label>
-      <div className="relative">
-        <Mail className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
-        <Input
-          id="email"
-          type="email"
-          required
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder="name@example.com"
-          hasIconLeft
-        />
-      </div>
-    </div>
-  );
-}
-
-interface PasswordFieldProps {
-  value: string;
-  onChange: (value: string) => void;
-  show: boolean;
-  onToggleShow: () => void;
-}
-
-function PasswordField({
-  value,
-  onChange,
-  show,
-  onToggleShow,
-}: PasswordFieldProps) {
-  return (
-    <div className="space-y-1">
-      <Label htmlFor="password">Password</Label>
-      <div className="relative">
-        <Lock className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
-        <Input
-          id="password"
-          type={show ? "text" : "password"}
-          required
-          minLength={8}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder="At least 8 characters"
-          hasIconLeft
-          hasIconRight
-        />
-        <button
-          type="button"
-          onClick={onToggleShow}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
-          aria-label={show ? "Hide password" : "Show password"}
-        >
-          {show ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-        </button>
-      </div>
-      <p className="text-xs text-slate-500 mt-1">Must be at least 8 characters.</p>
-    </div>
-  );
-}
-
-function SignInLink() {
-  return (
-    <div className="text-center border-t border-slate-800 pt-4">
-      <p className="text-sm text-slate-400">
-        Already have an account?{" "}
-        <Link
-          to="/login"
-          className="text-teal-400 hover:text-teal-300 font-medium hover:underline underline-offset-4 transition-colors"
-        >
-          Sign in
-        </Link>
-      </p>
     </div>
   );
 }

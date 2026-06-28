@@ -23,13 +23,13 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Modal state
+  // modal state
   const [adding, setAdding] = useState(false);
   const [editing, setEditing] = useState<PortfolioAsset | null>(null);
   const [removing, setRemoving] = useState<PortfolioAsset | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
-  const fetchPortfolio = async () => {
+  async function fetchPortfolio() {
     if (!user) return;
     setLoading(true);
     setError(null);
@@ -38,25 +38,24 @@ export default function Dashboard() {
       setPortfolio(response.portfolio || []);
     } catch (err: any) {
       setError("Could not load your portfolio. Please try again.");
-    } finally {
-      setLoading(false);
     }
-  };
+    setLoading(false);
+  }
 
   useEffect(() => {
     fetchPortfolio();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.user_id]);
 
-  const handleAddAsset = () => {
+  function handleAddAsset() {
     setAdding(true);
-  };
+  }
 
-  const handleAssetAdded = async () => {
+  async function handleAssetAdded() {
     await fetchPortfolio();
-  };
+  }
 
-  const handleRemoveConfirm = async () => {
+  async function handleRemoveConfirm() {
     if (!user || !removing) return;
     setActionError(null);
     try {
@@ -66,9 +65,9 @@ export default function Dashboard() {
     } catch (err: any) {
       setActionError("Could not remove the asset. Please try again.");
     }
-  };
+  }
 
-  const handleEditSave = async (newTarget: number) => {
+  async function handleEditSave(newTarget: number) {
     if (!user || !editing) return;
     setActionError(null);
     try {
@@ -78,7 +77,7 @@ export default function Dashboard() {
     } catch (err: any) {
       setActionError("Could not update the target. Please try again.");
     }
-  };
+  }
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
@@ -143,7 +142,7 @@ export default function Dashboard() {
       <Modal
         open={!!editing}
         onClose={() => setEditing(null)}
-        title={`Edit target — ${editing?.asset_symbol}`}
+        title={"Edit target — " + (editing ? editing.asset_symbol : "")}
       >
         {editing && (
           <EditTargetForm
@@ -187,8 +186,6 @@ export default function Dashboard() {
   );
 }
 
-// Edit form ---------------------------------------------------------------
-
 interface EditTargetFormProps {
   currentTarget: number;
   onCancel: () => void;
@@ -196,20 +193,16 @@ interface EditTargetFormProps {
   error: string | null;
 }
 
-function EditTargetForm({
-  currentTarget,
-  onCancel,
-  onSave,
-  error,
-}: EditTargetFormProps) {
+function EditTargetForm(props: EditTargetFormProps) {
+  const { currentTarget, onCancel, onSave, error } = props;
   const [value, setValue] = useState<string>(String(currentTarget));
 
-  const handleSubmit = (e: React.FormEvent) => {
+  function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const num = Number(value);
     if (!Number.isFinite(num) || num <= 0) return;
     onSave(num);
-  };
+  }
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">

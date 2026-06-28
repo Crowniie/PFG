@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import {
   ResponsiveContainer,
@@ -49,61 +49,45 @@ export default function AssetChart() {
   const [deciding, setDeciding] = useState<null | "EXECUTE" | "IGNORE">(null);
   const [decisionMessage, setDecisionMessage] = useState<string | null>(null);
 
-  // Load chart data
+  // load chart data
   useEffect(() => {
     if (!symbol) return;
-    let cancelled = false;
 
-    const load = async () => {
+    async function load() {
       setLoading(true);
       setError(null);
       try {
         const response = await getChartData(symbol);
-        if (!cancelled) {
-          setIndicators(response.indicators || []);
-        }
+        setIndicators(response.indicators || []);
       } catch (err) {
-        if (!cancelled) {
-          setError("Could not load chart data. Please try again.");
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
+        setError("Could not load chart data. Please try again.");
       }
-    };
+      setLoading(false);
+    }
 
     load();
-    return () => {
-      cancelled = true;
-    };
   }, [symbol]);
 
-  // Load recommendation if id is in URL
+  // load the recommendation when there's an id in the URL
   useEffect(() => {
     if (!recommendationId || !user) return;
-    let cancelled = false;
 
-    const load = async () => {
+    async function load() {
       try {
         const response = await getSignalsHistory(user.user_id);
-        if (cancelled) return;
         const found = (response.recommendations || []).find(
-          (r) => r.id === recommendationId
+          (r: Recommendation) => r.id === recommendationId
         );
         if (found) setRecommendation(found);
       } catch (err) {
-        // silent - not critical
+        // not critical, ignore
       }
-    };
+    }
 
     load();
-    return () => {
-      cancelled = true;
-    };
   }, [recommendationId, user?.user_id]);
 
-  const handleDecide = async (action: "EXECUTE" | "IGNORE") => {
+  async function handleDecide(action: "EXECUTE" | "IGNORE") {
     if (!recommendation || !user) return;
     setDeciding(action);
     setDecisionMessage(null);
@@ -119,7 +103,7 @@ export default function AssetChart() {
             ? "Recommendation executed. Your portfolio has been updated."
             : "Recommendation ignored."
         );
-        // Update local state so the panel reflects the new status
+        // update local state so the panel reflects the new status
         setRecommendation({
           ...recommendation,
           action_taken: action === "EXECUTE" ? "EXECUTED" : "IGNORED",
@@ -131,40 +115,15 @@ export default function AssetChart() {
       }
     } catch (err) {
       setDecisionMessage("Could not record your decision. Please try again.");
-    } finally {
-      setDeciding(null);
     }
-  };
+    setDeciding(null);
+  }
 
-  const filtered = useMemo(() => {
-    if (indicators.length === 0) return [];
-    const now = new Date();
-    let cutoff: Date | null = null;
-    switch (timeframe) {
-      case "1M":
-        cutoff = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-        break;
-      case "3M":
-        cutoff = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
-        break;
-      case "6M":
-        cutoff = new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000);
-        break;
-      case "YTD":
-        cutoff = new Date(now.getFullYear(), 0, 1);
-        break;
-      case "1Y":
-        cutoff = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
-        break;
-      case "ALL":
-      default:
-        cutoff = null;
-    }
-    if (!cutoff) return indicators;
-    return indicators.filter((p) => new Date(p.time) >= cutoff!);
-  }, [indicators, timeframe]);
+  // points inside the selected timeframe
+  const filtered = filterByTimeframe(indicators, timeframe);
 
-  const latest = indicators.length > 0 ? indicators[indicators.length - 1] : null;
+  const latest =
+    indicators.length > 0 ? indicators[indicators.length - 1] : null;
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
@@ -232,6 +191,30 @@ export default function AssetChart() {
   );
 }
 
+function filterByTimeframe(indicators: ChartIndicator[], timeframe: Timeframe) {
+  if (indicators.length === 0) return [];
+
+  const now = new Date();
+  let cutoff: Date | null = null;
+
+  if (timeframe === "1M") {
+    cutoff = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+  } else if (timeframe === "3M") {
+    cutoff = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+  } else if (timeframe === "6M") {
+    cutoff = new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000);
+  } else if (timeframe === "YTD") {
+    cutoff = new Date(now.getFullYear(), 0, 1);
+  } else if (timeframe === "1Y") {
+    cutoff = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+  } else {
+    cutoff = null; // ALL
+  }
+
+  if (!cutoff) return indicators;
+  return indicators.filter((p) => new Date(p.time) >= cutoff!);
+}
+
 // Decision Panel ---------------------------------------------------------
 
 interface DecisionPanelProps {
@@ -253,19 +236,22 @@ function DecisionPanel({
   const isExecuted = recommendation.action_taken === "EXECUTED";
   const isIgnored = recommendation.action_taken === "IGNORED";
 
+  let statusLabel = "Recommendation";
+  if (isPending) {
+    statusLabel = "Pending recommendation";
+  } else if (isExecuted) {
+    statusLabel = "Recommendation executed";
+  } else if (isIgnored) {
+    statusLabel = "Recommendation ignored";
+  }
+
   return (
     <div className="bg-slate-900 border border-amber-500/30 rounded-xl p-6 mb-6">
       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-4">
         <div className="flex flex-col gap-2 flex-1">
           <div className="flex items-center gap-2">
             <span className="text-xs font-medium text-amber-400 uppercase tracking-wider">
-              {isPending
-                ? "Pending recommendation"
-                : isExecuted
-                ? "Recommendation executed"
-                : isIgnored
-                ? "Recommendation ignored"
-                : "Recommendation"}
+              {statusLabel}
             </span>
             <SignalChip signal={recommendation.signal_type} />
           </div>
@@ -312,30 +298,35 @@ function DecisionPanel({
 }
 
 function SignalChip({ signal }: { signal: Recommendation["signal_type"] }) {
-  const styles: Record<string, string> = {
-    BUY_50: "bg-teal-500/10 text-teal-300 border-teal-500/20",
-    BUY_100: "bg-teal-500/20 text-teal-200 border-teal-500/30",
-    SELL_50: "bg-red-500/10 text-red-300 border-red-500/20",
-    SELL_100: "bg-red-500/20 text-red-200 border-red-500/30",
-    HOLD: "bg-slate-800 text-slate-400 border-slate-700",
-  };
-  const labels: Record<string, string> = {
-    BUY_50: "BUY 50%",
-    BUY_100: "BUY 100%",
-    SELL_50: "SELL 50%",
-    SELL_100: "SELL 100%",
-    HOLD: "HOLD",
-  };
+  let style = "bg-slate-800 text-slate-400 border-slate-700";
+  let label = "HOLD";
+
+  if (signal === "BUY_50") {
+    style = "bg-teal-500/10 text-teal-300 border-teal-500/20";
+    label = "BUY 50%";
+  } else if (signal === "BUY_100") {
+    style = "bg-teal-500/20 text-teal-200 border-teal-500/30";
+    label = "BUY 100%";
+  } else if (signal === "SELL_50") {
+    style = "bg-red-500/10 text-red-300 border-red-500/20";
+    label = "SELL 50%";
+  } else if (signal === "SELL_100") {
+    style = "bg-red-500/20 text-red-200 border-red-500/30";
+    label = "SELL 100%";
+  }
+
   return (
     <span
-      className={`px-2 py-1 rounded text-xs font-medium tracking-wider border ${styles[signal]}`}
+      className={
+        "px-2 py-1 rounded text-xs font-medium tracking-wider border " + style
+      }
     >
-      {labels[signal]}
+      {label}
     </span>
   );
 }
 
-// Subcomponents (chart) -----------------------------------------------------
+// Chart subcomponents -----------------------------------------------------
 
 function TimeframeSelector({
   value,
@@ -374,12 +365,12 @@ function PriceChart({ data }: { data: ChartIndicator[] }) {
           <LineChart data={data} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
             <CartesianGrid stroke="#1e293b" strokeDasharray="3 3" />
             <XAxis dataKey="time" tickFormatter={formatDateTick} stroke="#475569" tick={{ fontSize: 11 }} />
-            <YAxis stroke="#475569" tick={{ fontSize: 11 }} domain={["auto", "auto"]} tickFormatter={(v) => `$${v.toFixed(0)}`} />
+            <YAxis stroke="#475569" tick={{ fontSize: 11 }} domain={["auto", "auto"]} tickFormatter={(v) => "$" + v.toFixed(0)} />
             <Tooltip
               contentStyle={{ backgroundColor: "#0f172a", border: "1px solid #1e293b", borderRadius: "8px", color: "#f1f5f9" }}
               labelFormatter={formatDateTick}
               formatter={(value: any, name: any) => [
-                value != null ? `$${Number(value).toFixed(2)}` : "—",
+                value != null ? "$" + Number(value).toFixed(2) : "—",
                 name === "close" ? "Price" : name === "ma200" ? "MA200" : String(name ?? ""),
               ]}
             />
@@ -434,8 +425,8 @@ function LatestIndicators({ latest }: { latest: ChartIndicator | null }) {
       <h2 className="text-sm font-medium text-slate-400 uppercase tracking-wider mb-4">Latest values</h2>
       <dl className="flex flex-col gap-3">
         <Stat label="Date" value={formatDateFull(latest.time)} />
-        <Stat label="Price" value={latest.close != null ? `$${latest.close.toFixed(2)}` : "—"} highlight />
-        <Stat label="MA200" value={latest.ma200 != null ? `$${latest.ma200.toFixed(2)}` : "—"} />
+        <Stat label="Price" value={latest.close != null ? "$" + latest.close.toFixed(2) : "—"} highlight />
+        <Stat label="MA200" value={latest.ma200 != null ? "$" + latest.ma200.toFixed(2) : "—"} />
         <Stat label="MACD" value={latest.macd != null ? latest.macd.toFixed(3) : "—"} />
         <Stat label="Signal" value={latest.signal != null ? latest.signal.toFixed(3) : "—"} />
         <Stat label="Histogram" value={latest.histogram != null ? latest.histogram.toFixed(3) : "—"} />
@@ -444,11 +435,19 @@ function LatestIndicators({ latest }: { latest: ChartIndicator | null }) {
   );
 }
 
-function Stat({ label, value, highlight = false }: { label: string; value: string; highlight?: boolean }) {
+function Stat({
+  label,
+  value,
+  highlight = false,
+}: {
+  label: string;
+  value: string;
+  highlight?: boolean;
+}) {
   return (
     <div className="flex justify-between items-center">
       <dt className="text-xs text-slate-500 uppercase tracking-wider">{label}</dt>
-      <dd className={`font-mono text-sm ${highlight ? "text-teal-300 font-medium" : "text-slate-200"}`}>
+      <dd className={"font-mono text-sm " + (highlight ? "text-teal-300 font-medium" : "text-slate-200")}>
         {value}
       </dd>
     </div>
@@ -460,7 +459,7 @@ function formatDateTick(iso: any): string {
   try {
     const d = new Date(iso);
     return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-  } catch {
+  } catch (e) {
     return "";
   }
 }
@@ -470,7 +469,7 @@ function formatDateFull(iso: any): string {
   try {
     const d = new Date(iso);
     return d.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
-  } catch {
+  } catch (e) {
     return "";
   }
 }

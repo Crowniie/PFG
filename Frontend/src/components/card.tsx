@@ -1,35 +1,21 @@
-import type { InputHTMLAttributes } from "react";
+import type { HTMLAttributes, ReactNode } from "react";
 
-interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
-  hasIconLeft?: boolean;
-  hasIconRight?: boolean;
+interface CardProps extends HTMLAttributes<HTMLDivElement> {
+  children: ReactNode;
 }
 
-export default function Input(props: InputProps) {
-  const { className = "", hasIconLeft, hasIconRight, ...rest } = props;
-
-  // si hay icono a la izquierda le dejo mas hueco
-  let paddingLeft = "pl-3";
-  if (hasIconLeft) {
-    paddingLeft = "pl-11";
-  }
-
-  let paddingRight = "pr-3";
-  if (hasIconRight) {
-    paddingRight = "pr-11";
-  }
+export default function Card(props: CardProps) {
+  const { children, className = "", ...rest } = props;
 
   return (
-    <input
+    <div
       {...rest}
       className={
-        "w-full bg-slate-950 border border-slate-700 text-slate-100 rounded-lg py-2.5 " +
-        paddingLeft +
-        " " +
-        paddingRight +
-        " focus:outline-none focus:border-teal-400 focus:ring-1 focus:ring-teal-400 transition-colors placeholder:text-slate-600 " +
+        "bg-slate-900 border border-slate-800 rounded-xl p-6 md:p-8 shadow-[0_12px_40px_rgba(0,0,0,0.3)] " +
         className
       }
-    />
+    >
+      {children}
+    </div>
   );
 }

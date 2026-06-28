@@ -8,21 +8,22 @@ interface PortfolioCardProps {
   onRemove: (asset: PortfolioAsset) => void;
 }
 
-export default function PortfolioCard({
-  asset,
-  onEdit,
-  onRemove,
-}: PortfolioCardProps) {
+export default function PortfolioCard(props: PortfolioCardProps) {
+  const { asset, onEdit, onRemove } = props;
   const navigate = useNavigate();
 
-  const progress =
-    asset.target_quantity > 0
-      ? Math.min(100, (asset.current_quantity / asset.target_quantity) * 100)
-      : 0;
+  // how close the current quantity is to the target (capped at 100)
+  let progress = 0;
+  if (asset.target_quantity > 0) {
+    progress = (asset.current_quantity / asset.target_quantity) * 100;
+    if (progress > 100) {
+      progress = 100;
+    }
+  }
 
-  const handleViewChart = () => {
-    navigate(`/asset/${encodeURIComponent(asset.asset_symbol)}`);
-  };
+  function handleViewChart() {
+    navigate("/asset/" + encodeURIComponent(asset.asset_symbol));
+  }
 
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 flex flex-col gap-4">
@@ -40,8 +41,8 @@ export default function PortfolioCard({
 
       {/* Stats */}
       <div className="flex flex-col gap-3">
-        <Row label="Target Qty" value={`${asset.target_quantity} units`} />
-        <Row label="Current Qty" value={`${asset.current_quantity} units`} />
+        <Row label="Target Qty" value={asset.target_quantity + " units"} />
+        <Row label="Current Qty" value={asset.current_quantity + " units"} />
         <ProgressBar progress={progress} state={asset.position_state} />
 
         {asset.position_state !== "NONE" && (
@@ -49,7 +50,7 @@ export default function PortfolioCard({
             label="Entry Price"
             value={
               asset.entry_price !== null && asset.entry_price !== undefined
-                ? `$${asset.entry_price.toFixed(2)}`
+                ? "$" + asset.entry_price.toFixed(2)
                 : "--"
             }
           />
@@ -86,24 +87,25 @@ export default function PortfolioCard({
   );
 }
 
-// Helpers ---------------------------------------------------------------
-
 function PositionBadge({ state }: { state: PositionState }) {
-  const styles: Record<PositionState, string> = {
-    NONE: "bg-slate-800 text-slate-400 border-slate-700",
-    HALF_LONG: "bg-amber-500/10 text-amber-300 border-amber-500/20",
-    FULL_LONG: "bg-teal-500/10 text-teal-300 border-teal-500/20",
-  };
-  const labels: Record<PositionState, string> = {
-    NONE: "NONE",
-    HALF_LONG: "HALF LONG",
-    FULL_LONG: "FULL LONG",
-  };
+  let style = "bg-slate-800 text-slate-400 border-slate-700";
+  let label = "NONE";
+
+  if (state === "HALF_LONG") {
+    style = "bg-amber-500/10 text-amber-300 border-amber-500/20";
+    label = "HALF LONG";
+  } else if (state === "FULL_LONG") {
+    style = "bg-teal-500/10 text-teal-300 border-teal-500/20";
+    label = "FULL LONG";
+  }
+
   return (
     <span
-      className={`px-2 py-1 rounded text-xs font-medium tracking-wider border ${styles[state]}`}
+      className={
+        "px-2 py-1 rounded text-xs font-medium tracking-wider border " + style
+      }
     >
-      {labels[state]}
+      {label}
     </span>
   );
 }
@@ -114,33 +116,35 @@ interface RowProps {
   valueClass?: string;
 }
 
-function Row({ label, value, valueClass = "text-slate-100" }: RowProps) {
+function Row(props: RowProps) {
+  const { label, value, valueClass = "text-slate-100" } = props;
   return (
     <div className="flex justify-between items-center">
       <span className="text-sm text-slate-400">{label}</span>
-      <span className={`font-mono text-sm ${valueClass}`}>{value}</span>
+      <span className={"font-mono text-sm " + valueClass}>{value}</span>
     </div>
   );
 }
 
-interface ProgressBarProps {
+function ProgressBar({
+  progress,
+  state,
+}: {
   progress: number;
   state: PositionState;
-}
-
-function ProgressBar({ progress, state }: ProgressBarProps) {
-  const barColor =
-    state === "FULL_LONG"
-      ? "bg-teal-400"
-      : state === "HALF_LONG"
-      ? "bg-amber-400"
-      : "bg-slate-700";
+}) {
+  let barColor = "bg-slate-700";
+  if (state === "FULL_LONG") {
+    barColor = "bg-teal-400";
+  } else if (state === "HALF_LONG") {
+    barColor = "bg-amber-400";
+  }
 
   return (
     <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
       <div
-        className={`h-full rounded-full transition-all ${barColor}`}
-        style={{ width: `${progress}%` }}
+        className={"h-full rounded-full transition-all " + barColor}
+        style={{ width: progress + "%" }}
       />
     </div>
   );

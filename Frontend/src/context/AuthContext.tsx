@@ -1,9 +1,4 @@
-import {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-} from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 import type { ReactNode } from "react";
 import type { User } from "../types";
 
@@ -21,40 +16,36 @@ const STORAGE_KEY = "investment_advisor_user";
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
 
-  // On mount, try to restore session from localStorage
+  // restore the session from localStorage when the app loads
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
       try {
         setUser(JSON.parse(stored));
-      } catch {
+      } catch (e) {
         localStorage.removeItem(STORAGE_KEY);
       }
     }
   }, []);
 
-  const login = (newUser: User) => {
+  function login(newUser: User) {
     setUser(newUser);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(newUser));
-  };
+  }
 
-  const logout = () => {
+  function logout() {
     setUser(null);
     localStorage.removeItem(STORAGE_KEY);
+  }
+
+  const value = {
+    user: user,
+    login: login,
+    logout: logout,
+    isAuthenticated: !!user,
   };
 
-  return (
-    <AuthContext.Provider
-      value={{
-        user,
-        login,
-        logout,
-        isAuthenticated: !!user,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
-import type { Asset, PortfolioAsset } from "../types";
+import type { PortfolioAsset } from "../types";
 import { getAssets, addPortfolioAsset } from "../api/portfolio";
 import { useAuth } from "../context/AuthContext";
 import Modal from "./modal";
@@ -12,62 +12,43 @@ import Alert from "./alert";
 interface AddAssetModalProps {
   open: boolean;
   onClose: () => void;
-  /** Assets already in the user's portfolio (to exclude from the dropdown) */
   currentPortfolio: PortfolioAsset[];
-  /** Called when an asset is successfully added so the dashboard can refresh */
   onAdded: () => void;
 }
 
-export default function AddAssetModal({
-  open,
-  onClose,
-  currentPortfolio,
-  onAdded,
-}: AddAssetModalProps) {
+export default function AddAssetModal(props: AddAssetModalProps) {
+  const { open, onClose, currentPortfolio, onAdded } = props;
   const { user } = useAuth();
 
-  // Catalog state
-  const [catalog, setCatalog] = useState<Asset[]>([]);
+  const [catalog, setCatalog] = useState<any[]>([]);
   const [loadingCatalog, setLoadingCatalog] = useState(false);
   const [catalogError, setCatalogError] = useState<string | null>(null);
 
-  // Form state
   const [symbol, setSymbol] = useState("");
   const [target, setTarget] = useState("");
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  // Load catalog whenever the modal opens
+  // load the asset catalog whenever the modal opens
   useEffect(() => {
     if (!open) return;
-    let cancelled = false;
 
-    const load = async () => {
+    async function load() {
       setLoadingCatalog(true);
       setCatalogError(null);
       try {
         const response = await getAssets();
-        if (!cancelled) {
-          setCatalog(response.assets || []);
-        }
+        setCatalog(response.assets || []);
       } catch (err) {
-        if (!cancelled) {
-          setCatalogError("Could not load the asset catalog. Please try again.");
-        }
-      } finally {
-        if (!cancelled) {
-          setLoadingCatalog(false);
-        }
+        setCatalogError("Could not load the asset catalog. Please try again.");
       }
-    };
+      setLoadingCatalog(false);
+    }
 
     load();
-    return () => {
-      cancelled = true;
-    };
   }, [open]);
 
-  // Reset form fields whenever the modal opens
+  // reset the form fields whenever the modal opens
   useEffect(() => {
     if (open) {
       setSymbol("");
@@ -76,17 +57,20 @@ export default function AddAssetModal({
     }
   }, [open]);
 
-  // Filter catalog to exclude assets already in the user's portfolio
-const ownedSymbols = new Set(
-  (currentPortfolio || [])
-    .filter((p) => p?.asset_symbol)
-    .map((p) => p.asset_symbol.toUpperCase())
-);
-const available = catalog.filter(
-  (a) => a?.symbol && !ownedSymbols.has(a.symbol.toUpperCase())
-);
+  // symbols already in the portfolio (uppercased so we can compare)
+  const ownedSymbols: string[] = [];
+  for (const p of currentPortfolio || []) {
+    if (p && p.asset_symbol) {
+      ownedSymbols.push(p.asset_symbol.toUpperCase());
+    }
+  }
 
-  const handleSubmit = async (e: FormEvent) => {
+  // only offer assets the user isn't tracking yet
+  const available = catalog.filter(
+    (a) => a && a.symbol && ownedSymbols.indexOf(a.symbol.toUpperCase()) === -1
+  );
+
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (!user) return;
     setSubmitError(null);
@@ -121,26 +105,22 @@ const available = catalog.filter(
       } else {
         setSubmitError("Could not add the asset. Please try again.");
       }
-    } finally {
-      setSubmitting(false);
     }
-  };
+    setSubmitting(false);
+  }
 
   return (
     <Modal open={open} onClose={onClose} title="Add asset to portfolio">
-      {/* Catalog loading */}
       {loadingCatalog && (
         <div className="text-center py-6 text-slate-400 text-sm">
           Loading available assets…
         </div>
       )}
 
-      {/* Catalog error */}
       {!loadingCatalog && catalogError && (
         <Alert variant="error">{catalogError}</Alert>
       )}
 
-      {/* Catalog loaded successfully */}
       {!loadingCatalog && !catalogError && (
         <>
           {available.length === 0 ? (
@@ -192,10 +172,8 @@ const available = catalog.filter(
                 </p>
               </div>
 
-              {/* Error message */}
               {submitError && <Alert variant="error">{submitError}</Alert>}
 
-              {/* Actions */}
               <div className="flex gap-2 justify-end pt-2">
                 <Button
                   type="button"

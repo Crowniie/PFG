@@ -6,17 +6,22 @@ export default function Navbar() {
   const location = useLocation();
   const { user, logout } = useAuth();
 
-  const isActive = (path: string) => location.pathname === path;
+  function isActive(path: string) {
+    return location.pathname === path;
+  }
 
-  // Get user initials for the avatar
-  const initials = user?.name
-    ? user.name
-        .split(" ")
-        .map((p) => p[0])
-        .join("")
-        .slice(0, 2)
-        .toUpperCase()
-    : "?";
+  // build the avatar initials from the user's name
+  let initials = "?";
+  if (user && user.name) {
+    const parts = user.name.split(" ");
+    let result = "";
+    for (const p of parts) {
+      if (p[0]) {
+        result = result + p[0];
+      }
+    }
+    initials = result.slice(0, 2).toUpperCase();
+  }
 
   return (
     <nav className="bg-slate-900 border-b border-slate-800 sticky top-0 z-40">
@@ -30,13 +35,13 @@ export default function Navbar() {
 
           <div className="hidden md:flex items-center gap-2">
             <NavLink to="/dashboard" active={isActive("/dashboard")}>
-                Dashboard
+              Dashboard
             </NavLink>
             <NavLink to="/history" active={isActive("/history")}>
-                History
+              History
             </NavLink>
             <NavLink to="/knowledge" active={isActive("/knowledge")}>
-                Knowledge
+              Knowledge
             </NavLink>
           </div>
         </div>
@@ -63,13 +68,13 @@ export default function Navbar() {
       {/* Mobile tabs */}
       <div className="md:hidden border-t border-slate-800 px-4 py-2 flex items-center gap-2">
         <NavLink to="/dashboard" active={isActive("/dashboard")}>
-             Dashboard
+          Dashboard
         </NavLink>
         <NavLink to="/history" active={isActive("/history")}>
-            History
+          History
         </NavLink>
         <NavLink to="/knowledge" active={isActive("/knowledge")}>
-            Knowledge
+          Knowledge
         </NavLink>
       </div>
     </nav>
@@ -83,15 +88,15 @@ interface NavLinkProps {
 }
 
 function NavLink({ to, active, children }: NavLinkProps) {
+  let className =
+    "text-slate-400 hover:text-slate-100 transition-colors text-sm px-3 py-2";
+  if (active) {
+    className =
+      "text-teal-400 font-medium text-sm px-3 py-2 border-b-2 border-teal-400 -mb-px";
+  }
+
   return (
-    <Link
-      to={to}
-      className={
-        active
-          ? "text-teal-400 font-medium text-sm px-3 py-2 border-b-2 border-teal-400 -mb-px"
-          : "text-slate-400 hover:text-slate-100 transition-colors text-sm px-3 py-2"
-      }
-    >
+    <Link to={to} className={className}>
       {children}
     </Link>
   );

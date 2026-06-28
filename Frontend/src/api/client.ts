@@ -1,11 +1,13 @@
-//This file defines the API client for making requests to the middleware server.
+// API client for the n8n middleware
 
 interface FetchOptions extends RequestInit {
   body?: any;
 }
 
-//Error handliling for JSON responses and handling error parsing
-export async function apiFetch<T = any>(url: string,options: FetchOptions = {}): Promise<T> {
+export async function apiFetch(
+  url: string,
+  options: FetchOptions = {}
+): Promise<any> {
   const config: RequestInit = {
     ...options,
     headers: {
@@ -14,30 +16,34 @@ export async function apiFetch<T = any>(url: string,options: FetchOptions = {}):
     },
   };
 
-  // Convert body to a string if it is not an object
+  // stringify the body only if it's an object (strings are left as-is)
   if (options.body && typeof options.body === "object") {
     config.body = JSON.stringify(options.body);
   }
 
   const response = await fetch(url, config);
 
-  // Try to parse JSON 
-  let data: any;
+  // parse the json, fall back to null if there's no body
+  let data: any = null;
   try {
     data = await response.json();
-  } catch {
+  } catch (e) {
     data = null;
   }
 
-  // If the response is not ok, throw an error with the parsed data
   if (!response.ok) {
-    const error: any = new Error(
-      data?.message || data?.error || `HTTP ${response.status}`
-    );
+    let message = "HTTP " + response.status;
+    if (data && data.message) {
+      message = data.message;
+    } else if (data && data.error) {
+      message = data.error;
+    }
+
+    const error: any = new Error(message);
     error.status = response.status;
     error.data = data;
     throw error;
   }
 
-  return data as T;
+  return data;
 }

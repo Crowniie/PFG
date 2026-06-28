@@ -11,7 +11,9 @@ const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
   props,
   ref
 ) {
-  const { className = "", hasIconLeft, hasIconRight, ...rest } = props;
+  // saco children del resto para que no se cuele dentro del <input>
+  const { className = "", hasIconLeft, hasIconRight, children, ...rest } =
+    props;
 
   // si hay icono a la izquierda le dejo mas hueco
   let paddingLeft = "pl-3";

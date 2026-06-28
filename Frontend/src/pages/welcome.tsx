@@ -24,8 +24,6 @@ export default function Welcome() {
   );
 }
 
-// Top bar ---------------------------------------------------------------------
-
 function TopBar() {
   return (
     <header className="border-b border-slate-800 sticky top-0 z-40 bg-slate-950/80 backdrop-blur-sm">
@@ -52,8 +50,6 @@ function TopBar() {
     </header>
   );
 }
-
-// Hero ------------------------------------------------------------------------
 
 function Hero() {
   return (
@@ -90,7 +86,7 @@ function Hero() {
         </div>
       </div>
 
-      {/* Mock dashboard card to the right */}
+      {/* Mock dashboard card on the right */}
       <div className="relative">
         <div className="absolute inset-0 bg-teal-500/5 blur-3xl rounded-full" />
         <div className="relative bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl">
@@ -134,8 +130,6 @@ function Row({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
-
-// How it works ---------------------------------------------------------------
 
 function HowItWorks() {
   return (
@@ -195,8 +189,6 @@ function Step({ number, icon, title, body }: StepProps) {
     </div>
   );
 }
-
-// Features --------------------------------------------------------------------
 
 function Features() {
   return (

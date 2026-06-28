@@ -9,11 +9,8 @@ import {
 import type { ReactNode } from "react";
 import Navbar from "../components/navbar";
 
-// -----------------------------------------------------------------------------
-// Section catalog. To add more sections in the future (Financial responsibility,
-// Risk tolerance, Tax efficiency, etc.), append entries to this array and
-// create the matching content component below.
-// -----------------------------------------------------------------------------
+// Section catalog. To add a new section, append an entry here and create the
+// matching content component below.
 
 interface SectionDef {
   id: string;
@@ -49,14 +46,11 @@ const SECTIONS: SectionDef[] = [
   },
 ];
 
-// -----------------------------------------------------------------------------
-// Page
-// -----------------------------------------------------------------------------
-
 export default function Knowledge() {
   const [activeId, setActiveId] = useState(SECTIONS[0].id);
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
 
+  // highlight the section currently in view while scrolling
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -73,20 +67,20 @@ export default function Knowledge() {
       }
     );
 
-    SECTIONS.forEach((s) => {
+    for (const s of SECTIONS) {
       const el = sectionRefs.current[s.id];
       if (el) observer.observe(el);
-    });
+    }
 
     return () => observer.disconnect();
   }, []);
 
-  const handleNavClick = (id: string) => {
+  function handleNavClick(id: string) {
     const el = sectionRefs.current[id];
     if (el) {
       el.scrollIntoView({ behavior: "smooth", block: "start" });
     }
-  };
+  }
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
@@ -152,9 +146,7 @@ export default function Knowledge() {
   );
 }
 
-// -----------------------------------------------------------------------------
-// Section content components
-// -----------------------------------------------------------------------------
+// Section content components ---------------------------------------------
 
 function SavingVsInvestingSection() {
   return (
@@ -424,9 +416,7 @@ function SignalsSection() {
   );
 }
 
-// -----------------------------------------------------------------------------
-// Helpers
-// -----------------------------------------------------------------------------
+// Helpers ----------------------------------------------------------------
 
 interface ExampleBoxProps {
   title: string;
@@ -586,18 +576,25 @@ interface SignalBadgeProps {
 }
 
 function SignalBadge({ tone, label }: SignalBadgeProps) {
-  const map: Record<string, string> = {
-    "buy-strong": "bg-teal-500/20 text-teal-200 border-teal-500/30",
-    "buy-weak": "bg-teal-500/10 text-teal-300 border-teal-500/20",
-    "sell-strong": "bg-red-500/20 text-red-200 border-red-500/30",
-    "sell-weak": "bg-red-500/10 text-red-300 border-red-500/20",
-    hold: "bg-slate-800 text-slate-400 border-slate-700",
-  };
+  // default = hold
+  let cls = "bg-slate-800 text-slate-400 border-slate-700";
+
+  if (tone === "buy-strong") {
+    cls = "bg-teal-500/20 text-teal-200 border-teal-500/30";
+  } else if (tone === "buy-weak") {
+    cls = "bg-teal-500/10 text-teal-300 border-teal-500/20";
+  } else if (tone === "sell-strong") {
+    cls = "bg-red-500/20 text-red-200 border-red-500/30";
+  } else if (tone === "sell-weak") {
+    cls = "bg-red-500/10 text-red-300 border-red-500/20";
+  }
+
   return (
     <span
-      className={`inline-block px-2 py-1 rounded text-xs font-mono font-medium tracking-wider border ${
-        map[tone] ?? map.hold
-      }`}
+      className={
+        "inline-block px-2 py-1 rounded text-xs font-mono font-medium tracking-wider border " +
+        cls
+      }
     >
       {label}
     </span>

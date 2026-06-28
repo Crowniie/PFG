@@ -5,7 +5,9 @@ interface EmptyStateProps {
   onAddAsset: () => void;
 }
 
-export default function EmptyState({ onAddAsset }: EmptyStateProps) {
+export default function EmptyState(props: EmptyStateProps) {
+  const { onAddAsset } = props;
+
   return (
     <div className="flex flex-col items-center justify-center text-center py-16 px-4">
       <div className="w-20 h-20 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center mb-6">

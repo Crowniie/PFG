@@ -9,28 +9,39 @@ interface ModalProps {
   children: ReactNode;
 }
 
-export default function Modal({ open, onClose, title, children }: ModalProps) {
-  // Close on ESC key
+export default function Modal(props: ModalProps) {
+  const { open, onClose, title, children } = props;
+
+  // cerrar el modal cuando se pulsa la tecla ESC
   useEffect(() => {
     if (!open) return;
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    }
+
+    window.addEventListener("keydown", handleKey);
+    return () => {
+      window.removeEventListener("keydown", handleKey);
     };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
   }, [open, onClose]);
 
-  if (!open) return null;
+  // si no esta abierto no pinto nada
+  if (!open) {
+    return null;
+  }
 
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center px-4"
       onClick={onClose}
     >
-      {/* Backdrop */}
+      {/* fondo oscuro */}
       <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm" />
 
-      {/* Modal */}
+      {/* la ventana del modal */}
       <div
         className="relative bg-slate-900 border border-slate-800 rounded-xl p-6 w-full max-w-md shadow-2xl"
         onClick={(e) => e.stopPropagation()}
